@@ -15,5 +15,8 @@
     "webpack": "^5.59.0",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.3.1"
+  },
+  "dependencies": {
+    "p5": "^1.4.0"
   }
 }
