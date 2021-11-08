@@ -33,6 +33,22 @@ new P5(s => {
   const windowColor = '#c3c3c3'
   const bgColor = '#008282'
 
+  const drawInset = (background, x, y, w, h) => {
+    s.noStroke()
+
+    /* Draw shadowed. */
+    s.fill(0x00, 0x7F)
+    s.rect(x, y, w - 1, h - 1)
+
+    /* Draw shiny. */
+    s.fill(0xFF)
+    s.rect(x + 1, y + 1, w - 1, h - 1)
+
+    /* Draw regular part of window. */
+    s.fill(background)
+    s.rect(x + 1, y + 1, w - 2, h - 2)
+  }
+
   const drawBevel = (background, x, y, w, h) => {
     s.noStroke()
 
@@ -63,7 +79,7 @@ new P5(s => {
     bottom,
     right,
     background,
-    bevel
+    borderStyle
   }) => {
     const emitter = makeEventEmitter()
     const children = new Set()
@@ -99,8 +115,16 @@ new P5(s => {
       }
       s.push()
       s.translate(left, top)
-      if (bevel) {
+      if (borderStyle === 'bevel') {
         drawBevel(
+          background,
+          0,
+          0,
+          right - left,
+          bottom - top
+        )
+      } else if (borderStyle === 'inset') {
+        drawInset(
           background,
           0,
           0,
@@ -152,6 +176,10 @@ new P5(s => {
       right = v
     }
 
+    const setBorderStyle = (v) => {
+      borderStyle = v
+    }
+
     const contains = (x, y) => (
       x >= left && y >= top && x <= right && y <= bottom
     )
@@ -166,6 +194,7 @@ new P5(s => {
       setBottom,
       setLeft,
       setRight,
+      setBorderStyle,
       contains,
       getBounds () { return { top, left, right, bottom } },
       getWidth () { return right - left },
@@ -174,7 +203,8 @@ new P5(s => {
       getTop () { return top },
       getBottom () { return bottom },
       getRight () { return right },
-      getParent () { return parents.get(ret) }
+      getParent () { return parents.get(ret) },
+      getBorderStyle () { return borderStyle }
     }
 
     return ret
@@ -203,27 +233,35 @@ new P5(s => {
   const makeText = ({
     text,
     color,
+    left,
+    top,
     marginLeft,
     marginTop,
+    textStyle,
     ...rest
   }) => {
-    const container = makeContainer({ ...rest })
+    const container = makeContainer({ left, top, ...rest })
     const draw = container.draw
     container.draw = () => {
       draw()
+      s.textStyle(textStyle || s.NORMAL)
       s.fill(color)
       s.text(
         text,
-        marginLeft || 0,
-        container.getHeight() - 2 + (marginTop || 0)
+        (marginLeft || 0) + (left || 0),
+        (top || 0) + container.getHeight() - 2 + (marginTop || 0)
       )
     }
     return container
   }
 
   const makeWindow = ({ title, ...rest }) => {
-    const container = makeContainer({ background: windowColor, bevel: true, ...rest })
-    const contents = makeContainer({ background: windowColor, bevel: false, ...rest })
+    const container = makeContainer({
+      background: windowColor,
+      borderStyle: 'bevel',
+      ...rest
+    })
+    const contents = makeContainer({ background: windowColor, ...rest })
     contents.layout = makeMarginLayout(contents, {
       marginLeft: 3,
       marginTop: 3 + 18,
@@ -234,8 +272,7 @@ new P5(s => {
       background: titlebarColor,
       color: titlebarTextColor,
       text: title,
-      marginLeft: 10,
-      bevel: false
+      marginLeft: 10
     })
     titlebar.layout = makeMarginLayout(titlebar, {
       marginLeft: 3,
@@ -276,12 +313,57 @@ new P5(s => {
     return container
   }
 
+  const makeButton = ({ ...rest }) => {
+    const container = makeText({
+      background: windowColor,
+      color: '#000',
+      borderStyle: 'bevel',
+      textStyle: s.BOLD,
+      ...rest
+    })
+    container.on('mousepress', () => {
+      container.setBorderStyle('inset')
+    })
+    container.on('mouserelease', () => {
+      container.setBorderStyle('bevel')
+    })
+    return container
+  }
+
+  const makeTaskbar = () => {
+    const container = makeContainer({
+      top: 0,
+      left: 0,
+      bottom: 29,
+      right: 800,
+      borderStyle: 'bevel',
+      background: windowColor
+    })
+    container.layout = makeMarginLayout(container, {
+      marginLeft: 0,
+      marginRight: 0,
+      marginBottom: 0,
+      top: 600 - 29
+    })
+
+    const button = makeButton({
+      left: 3,
+      top: 3,
+      bottom: 3 + 29 - 6,
+      right: 64,
+      marginLeft: 4,
+      marginTop: -5,
+      text: 'Start'
+    })
+    container.add(button)
+    return container
+  }
+
   const root = makeContainer({
     top: 0,
     left: 0,
     bottom: 600,
     right: 800,
-    bevel: false,
     background: bgColor
   })
 
@@ -301,6 +383,7 @@ new P5(s => {
     title: 'test'
   })
 
+  root.add(makeTaskbar())
   root.add(wnd)
   root.add(wnd2)
 
