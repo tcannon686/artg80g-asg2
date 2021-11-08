@@ -1,6 +1,8 @@
 import * as P5 from 'p5'
+import SfxThwunk from './assets/thwunk.mp3'
+import SfxMinesweeper from './assets/minesweeper.mp3'
 
-const { min, max, floor, random } = Math
+const { min, max, floor, random, ceil } = Math
 
 const makeEventEmitter = () => {
   const map = new Map()
@@ -29,12 +31,33 @@ new P5(s => {
     s.createCanvas(800, 600)
   }
 
+  const animationLength = 50
   const allMouseEvents = ['mousepress', 'mouserelease', 'mousemove']
   const titlebarTextColor = '#ffffff'
   const titlebarColor = '#000082'
   const windowColor = '#c3c3c3'
   const bgColor = '#008282'
   let time = 0
+
+  let sfxThwunk
+  let sfxMinesweeper
+
+  const makeSfx = (src) => {
+    const sfxs = Array(25).fill(null).map(x => s.createAudio(src))
+    let index = 0
+    return {
+      play () {
+        sfxs[index].play()
+        index ++
+        index %= sfxs.length
+      }
+    }
+  }
+
+  s.preload = () => {
+    sfxThwunk = makeSfx(SfxThwunk)
+    sfxMinesweeper = s.createAudio(SfxMinesweeper)
+  }
 
   const drawInset = (background, x, y, w, h) => {
     s.noStroke()
@@ -271,7 +294,7 @@ new P5(s => {
     const draw = container.draw
     const offset = Math.random() * 1000
     return () => {
-      const t = min(time / 60, 1.0)
+      const t = min(time / animationLength, 1.0)
       const shakeAmount = (t ** 10) * 0.75
       const centerX = (container.getLeft() + container.getRight()) / 2
       const centerY = (container.getTop() + container.getBottom()) / 2
@@ -468,6 +491,7 @@ new P5(s => {
         top: random() * (root.getHeight() - 128)
       })
       root.add(dialog)
+      sfxThwunk.play()
       timeoutLength *= 0.9
       timeoutLength = max(timeoutLength, 250)
       setTimeout(dialogLoop, timeoutLength)
@@ -480,13 +504,55 @@ new P5(s => {
     title: 'Welcome!',
     text: 'Psst! Boss is away...Minesweeper? ;-)',
     onOkay () {
+      sfxMinesweeper.play()
       dialogLoop()
     }
   }))
 
+  const textColors = ['#0e1f26', '#008282', '#2593b8', '#0f6187', '#000082']
+  const getColor = t => {
+    const index = floor(t) % textColors.length
+    const nextIndex = ceil(t) % textColors.length
+    const color = s.color(textColors[index])
+    const nextColor = s.color(textColors[nextIndex])
+    const lerpT = (t - floor(t))
+    return s.lerpColor(color, nextColor, lerpT)
+  }
   s.draw = () => {
-    root.draw()
-    time += s.deltaTime / 1000
+    if (time - animationLength < 3) {
+      root.draw()
+    }
+    if (time >= animationLength) {
+      s.push()
+      s.noStroke()
+      s.translate(0, min(0, (time - animationLength) * 200 - 600))
+
+      s.fill(getColor(1))
+      s.rect(0, 0, 800, 600)
+
+      s.textAlign(s.CENTER)
+      s.fill(getColor(4))
+      s.textStyle(s.ITALIC)
+      s.textSize(24)
+      s.text('Microsoft Presents', 800 / 2, 600 / 2 - 64)
+
+      s.textStyle(s.NORMAL)
+      s.textSize(72)
+      for (let i = 0; i < textColors.length; i += 0.25) {
+        const t = i + time
+        s.fill(getColor(t))
+        s.text('Mine Sweeper', 800 / 2 + i * 4, 600 / 2 + i * 3)
+      }
+
+      s.fill(getColor(3))
+      s.textStyle(s.NORMAL)
+      s.textSize(24)
+      s.text('October, 1990', 800 / 2, 600 - 64)
+      s.pop()
+    }
+    if (dialogCount > 0) {
+      time += s.deltaTime / 1000
+    }
   }
 
   const makeMouseHandler = (name) =>
