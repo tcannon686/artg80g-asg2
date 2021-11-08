@@ -1,5 +1,7 @@
 import * as P5 from 'p5'
 
+const { max, floor, random } = Math
+
 const makeEventEmitter = () => {
   const map = new Map()
   return {
@@ -416,13 +418,35 @@ new P5(s => {
     background: bgColor
   })
 
-  const wnd2 = makeDialog({
-    title: 'System Error',
-    text: 'Uh oh.'
-  })
+  const errorMsgs = [
+    'Uh oh! Something went went wrong.',
+    'An error occurred.',
+    'System error detected!',
+    'Task failed.',
+    'Error! Your files are exactly where you left them.',
+    'A system the problem the detected.',
+    'An error has been occurred.',
+    'Minesweeper is coming.',
+    'Minesweeper is coming in 1990!',
+    'Prepare yourself for MINESWEEPER',
+    'Uh oh? Here comes the sweep!'
+  ]
+  let timeoutLength = 5000
+  const dialogLoop = () => {
+    const dialog = makeDialog({
+      title: 'System Error',
+      text: errorMsgs[floor(random() * errorMsgs.length)],
+      left: random() * root.getWidth(),
+      top: random() * root.getHeight()
+    })
+    root.add(dialog)
+    timeoutLength *= 0.9
+    timeoutLength = max(timeoutLength, 250)
+    setTimeout(dialogLoop, timeoutLength)
+  }
+  dialogLoop()
 
   root.add(makeTaskbar())
-  root.add(wnd2)
 
   s.draw = () => {
     root.draw()
