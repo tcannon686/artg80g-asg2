@@ -396,6 +396,7 @@ new P5(s => {
 
   const makeDialog = ({
     top, left, bottom, right, text,
+    onOkay,
     ...rest
   }) => {
     left = left || root.getWidth() / 2 - 128
@@ -425,6 +426,9 @@ new P5(s => {
       text: 'Okay'
     })
     okay.on('mouserelease', () => {
+      if (onOkay) {
+        onOkay()
+      }
       w.getParent().remove(w)
     })
 
@@ -470,9 +474,15 @@ new P5(s => {
       dialogCount++
     }
   }
-  dialogLoop()
 
   root.add(makeTaskbar())
+  root.add(makeDialog({
+    title: 'Welcome!',
+    text: 'Psst! Boss is away...Minesweeper? ;-)',
+    onOkay () {
+      dialogLoop()
+    }
+  }))
 
   s.draw = () => {
     root.draw()
