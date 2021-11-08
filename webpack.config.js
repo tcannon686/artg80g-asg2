@@ -11,13 +11,13 @@ module.exports = {
     rules: [
       {
         test: /\.css$/i,
-        use: ['style-loader', 'css-loader'],
+        use: ['style-loader', 'css-loader']
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif|mp3|wav)$/i,
-        type: 'asset/resource',
-      },
-    ],
+        type: 'asset/resource'
+      }
+    ]
   },
   devServer: {
     port: 3000

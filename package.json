@@ -6,7 +6,7 @@
   "scripts": {
     "build": "webpack --mode production",
     "start": "webpack serve --mode development",
-    "lint": "standard src/**/* *.js"
+    "lint": "standard src/**/*.js *.js"
   },
   "author": "Thomas Cannon",
   "devDependencies": {

@@ -48,7 +48,7 @@ new P5(s => {
     return {
       play () {
         sfxs[index].play()
-        index ++
+        index++
         index %= sfxs.length
       }
     }
@@ -532,22 +532,26 @@ new P5(s => {
 
       s.textAlign(s.CENTER)
       s.fill(getColor(4))
-      s.textStyle(s.ITALIC)
+      s.textFont('Helvetica')
       s.textSize(24)
-      s.text('Microsoft Presents', 800 / 2, 600 / 2 - 64)
+      s.text('Microsoft presents:', 800 / 2, 600 / 2 - 64)
 
       s.textStyle(s.NORMAL)
       s.textSize(72)
-      for (let i = 0; i < textColors.length; i += 0.25) {
-        const t = i + time
-        s.fill(getColor(t))
-        s.text('Mine Sweeper', 800 / 2 + i * 4, 600 / 2 + i * 3)
+      s.textFont('Georgia')
+      for (let i = 0; i < 128; i++) {
+        const v = i * 1 / 128
+        const t = (v + time / 4) * textColors.length
+        s.fill(i === 127 ? '#fff' : getColor(t))
+        s.textSize(32 + v * v * 48)
+        s.text('MINESWEEPER', 800 / 2, 600 / 2 - 8 + v * 64)
       }
 
-      s.fill(getColor(3))
+      s.fill(getColor(4))
       s.textStyle(s.NORMAL)
       s.textSize(24)
-      s.text('October, 1990', 800 / 2, 600 - 64)
+      s.textFont('Helvetica')
+      s.text('Coming October 31st, 1990', 800 / 2, 600 / 2 + 128)
       s.pop()
     }
     if (dialogCount > 0) {
