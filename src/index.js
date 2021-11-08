@@ -1,6 +1,6 @@
 import * as P5 from 'p5'
 
-const { max, floor, random } = Math
+const { min, max, floor, random } = Math
 
 const makeEventEmitter = () => {
   const map = new Map()
@@ -34,6 +34,7 @@ new P5(s => {
   const titlebarColor = '#000082'
   const windowColor = '#c3c3c3'
   const bgColor = '#008282'
+  let time = 0
 
   const drawInset = (background, x, y, w, h) => {
     s.noStroke()
@@ -247,23 +248,44 @@ new P5(s => {
     textAlign = textAlign || s.LEFT
     const container = makeContainer({ left, top, ...rest })
     const draw = container.draw
+    const textX = {
+      [s.LEFT]: () => (marginLeft || 0) + (container.getLeft() || 0),
+      [s.RIGHT]: () => (container.getRight()) - (marginRight || 0),
+      [s.CENTER]: () => (container.getLeft() + container.getRight()) / 2
+    }
     container.draw = () => {
-      const textX = {
-        [s.LEFT]: (marginLeft || 0) + (container.getLeft() || 0),
-        [s.RIGHT]: (container.getRight()) - (marginRight || 0),
-        [s.CENTER]: (container.getLeft() + container.getRight()) / 2
-      }[textAlign]
       draw()
       s.textStyle(textStyle || s.NORMAL)
       s.textAlign(textAlign || s.LEFT)
       s.fill(color || '#000')
       s.text(
         text,
-        textX,
+        textX[textAlign](),
         (top || 0) + container.getHeight() - 2 + (marginTop || 0)
       )
     }
     return container
+  }
+
+  const makeShaker = (container) => {
+    const draw = container.draw
+    const offset = Math.random() * 1000
+    return () => {
+      const t = min(time / 60, 1.0)
+      const shakeAmount = (t ** 10) * 0.75
+      const centerX = (container.getLeft() + container.getRight()) / 2
+      const centerY = (container.getTop() + container.getBottom()) / 2
+      const shakeRot = Math.sin(time * 31 + offset) * shakeAmount / 5
+      const shakeX = Math.sin(time * 33 + offset) * 5 * shakeAmount
+      const shakeY = Math.cos(time * 37 + offset) * 5 * shakeAmount
+      s.push()
+      s.translate(centerX, centerY)
+      s.rotate(shakeRot)
+      s.translate(-centerX, -centerY)
+      s.translate(shakeX, shakeY)
+      draw()
+      s.pop()
+    }
   }
 
   const makeWindow = ({ title, ...rest }) => {
@@ -321,6 +343,7 @@ new P5(s => {
     container.content = content
     container.add(content)
     container.add(titlebar)
+    container.draw = makeShaker(container)
     return container
   }
 
@@ -423,7 +446,6 @@ new P5(s => {
     'An error occurred.',
     'System error detected!',
     'Task failed.',
-    'Error! Your files are exactly where you left them.',
     'A system the problem the detected.',
     'An error has been occurred.',
     'Minesweeper is coming.',
@@ -432,17 +454,21 @@ new P5(s => {
     'Uh oh? Here comes the sweep!'
   ]
   let timeoutLength = 5000
+  let dialogCount = 0
   const dialogLoop = () => {
-    const dialog = makeDialog({
-      title: 'System Error',
-      text: errorMsgs[floor(random() * errorMsgs.length)],
-      left: random() * root.getWidth(),
-      top: random() * root.getHeight()
-    })
-    root.add(dialog)
-    timeoutLength *= 0.9
-    timeoutLength = max(timeoutLength, 250)
-    setTimeout(dialogLoop, timeoutLength)
+    if (dialogCount < 60) {
+      const dialog = makeDialog({
+        title: 'System Error',
+        text: errorMsgs[floor(random() * errorMsgs.length)],
+        left: random() * (root.getWidth() - 256),
+        top: random() * (root.getHeight() - 128)
+      })
+      root.add(dialog)
+      timeoutLength *= 0.9
+      timeoutLength = max(timeoutLength, 250)
+      setTimeout(dialogLoop, timeoutLength)
+      dialogCount++
+    }
   }
   dialogLoop()
 
@@ -450,6 +476,7 @@ new P5(s => {
 
   s.draw = () => {
     root.draw()
+    time += s.deltaTime / 1000
   }
 
   const makeMouseHandler = (name) =>
