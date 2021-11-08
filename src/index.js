@@ -117,7 +117,7 @@ new P5(s => {
       s.translate(left, top)
       if (borderStyle === 'bevel') {
         drawBevel(
-          background,
+          background || windowColor,
           0,
           0,
           right - left,
@@ -125,7 +125,7 @@ new P5(s => {
         )
       } else if (borderStyle === 'inset') {
         drawInset(
-          background,
+          background || windowColor,
           0,
           0,
           right - left,
@@ -133,7 +133,7 @@ new P5(s => {
         )
       } else {
         s.noStroke()
-        s.fill(background)
+        s.fill(background || windowColor)
         s.rect(0, 0, right - left, bottom - top)
       }
       children.forEach(child => child.draw())
@@ -237,18 +237,27 @@ new P5(s => {
     top,
     marginLeft,
     marginTop,
+    marginRight,
     textStyle,
+    textAlign,
     ...rest
   }) => {
+    textAlign = textAlign || s.LEFT
     const container = makeContainer({ left, top, ...rest })
     const draw = container.draw
     container.draw = () => {
+      const textX = {
+        [s.LEFT]: (marginLeft || 0) + (container.getLeft() || 0),
+        [s.RIGHT]: (container.getRight()) - (marginRight || 0),
+        [s.CENTER]: (container.getLeft() + container.getRight()) / 2
+      }[textAlign]
       draw()
       s.textStyle(textStyle || s.NORMAL)
-      s.fill(color)
+      s.textAlign(textAlign || s.LEFT)
+      s.fill(color || '#000')
       s.text(
         text,
-        (marginLeft || 0) + (left || 0),
+        textX,
         (top || 0) + container.getHeight() - 2 + (marginTop || 0)
       )
     }
@@ -261,8 +270,8 @@ new P5(s => {
       borderStyle: 'bevel',
       ...rest
     })
-    const contents = makeContainer({ background: windowColor, ...rest })
-    contents.layout = makeMarginLayout(contents, {
+    const content = makeContainer({ background: windowColor, ...rest })
+    content.layout = makeMarginLayout(content, {
       marginLeft: 3,
       marginTop: 3 + 18,
       marginRight: 3,
@@ -307,8 +316,8 @@ new P5(s => {
       })
     })
     container.titlebar = titlebar
-    container.contents = contents
-    container.add(contents)
+    container.content = content
+    container.add(content)
     container.add(titlebar)
     return container
   }
@@ -319,6 +328,9 @@ new P5(s => {
       color: '#000',
       borderStyle: 'bevel',
       textStyle: s.BOLD,
+      textAlign: s.CENTER,
+      marginLeft: 4,
+      marginTop: -5,
       ...rest
     })
     container.on('mousepress', () => {
@@ -351,12 +363,49 @@ new P5(s => {
       top: 3,
       bottom: 3 + 29 - 6,
       right: 64,
-      marginLeft: 4,
-      marginTop: -5,
       text: 'Start'
     })
     container.add(button)
     return container
+  }
+
+  const makeDialog = ({
+    top, left, bottom, right, text,
+    ...rest
+  }) => {
+    left = left || root.getWidth() / 2 - 128
+    top = top || root.getHeight() / 2 - 64
+    bottom = bottom || top + 128
+    right = right || left + 256
+    const w = makeWindow({ left, top, bottom, right, ...rest })
+    const msg = makeText({
+      left: 3,
+      top: 3,
+      right: 64,
+      bottom: 23 + 3,
+      text,
+      textAlign: s.CENTER
+    })
+    msg.layout = makeMarginLayout(msg, {
+      marginLeft: 3,
+      marginRight: 3,
+      marginTop: 3,
+      marginBottom: 64
+    })
+    const okay = makeButton({
+      left: w.content.getWidth() / 2 - 32,
+      top: w.content.getHeight() - 23 - 3,
+      right: w.content.getWidth() / 2 + 32,
+      bottom: w.content.getHeight() - 3,
+      text: 'Okay'
+    })
+    okay.on('mouserelease', () => {
+      w.getParent().remove(w)
+    })
+
+    w.content.add(msg)
+    w.content.add(okay)
+    return w
   }
 
   const root = makeContainer({
@@ -367,24 +416,12 @@ new P5(s => {
     background: bgColor
   })
 
-  const wnd = makeWindow({
-    top: 10,
-    left: 10,
-    bottom: 500,
-    right: 500,
-    title: 'Minesweeper'
-  })
-
-  const wnd2 = makeWindow({
-    top: 30,
-    left: 50,
-    bottom: 400,
-    right: 300,
-    title: 'test'
+  const wnd2 = makeDialog({
+    title: 'System Error',
+    text: 'Uh oh.'
   })
 
   root.add(makeTaskbar())
-  root.add(wnd)
   root.add(wnd2)
 
   s.draw = () => {
