@@ -33,10 +33,11 @@ new P5(s => {
 
   const animationLength = 50
   const allMouseEvents = ['mousepress', 'mouserelease', 'mousemove']
-  const titlebarTextColor = '#ffffff'
-  const titlebarColor = '#000082'
-  const windowColor = '#c3c3c3'
-  const bgColor = '#008282'
+  const titlebarTextColor = '#da3e52'
+  const titlebarColor = '#393d3f'
+  const windowColor = '#9cc4b2'
+  const bgColor = '#5688c7'
+  const textColor = '#393d3f'
   let time = 0
 
   let sfxThwunk
@@ -278,9 +279,10 @@ new P5(s => {
     }
     container.draw = () => {
       draw()
+      s.textFont('Helvetica')
       s.textStyle(textStyle || s.NORMAL)
       s.textAlign(textAlign || s.LEFT)
-      s.fill(color || '#000')
+      s.fill(color || textColor)
       s.text(
         text,
         textX[textAlign](),
@@ -373,7 +375,7 @@ new P5(s => {
   const makeButton = ({ ...rest }) => {
     const container = makeText({
       background: windowColor,
-      color: '#000',
+      color: textColor,
       borderStyle: 'bevel',
       textStyle: s.BOLD,
       textAlign: s.CENTER,
@@ -439,7 +441,7 @@ new P5(s => {
       marginLeft: 3,
       marginRight: 3,
       marginTop: 3,
-      marginBottom: 64
+      marginBottom: 59
     })
     const okay = makeButton({
       left: w.content.getWidth() / 2 - 32,
@@ -509,7 +511,7 @@ new P5(s => {
     }
   }))
 
-  const textColors = ['#0e1f26', '#008282', '#2593b8', '#0f6187', '#000082']
+  const textColors = ['#393d3f', '#9cc4b2', '#5688c7']
   const getColor = t => {
     const index = floor(t) % textColors.length
     const nextIndex = ceil(t) % textColors.length
@@ -527,11 +529,11 @@ new P5(s => {
       s.noStroke()
       s.translate(0, min(0, (time - animationLength) * 200 - 600))
 
-      s.fill(getColor(1))
+      s.fill('#393d3f')
       s.rect(0, 0, 800, 600)
 
       s.textAlign(s.CENTER)
-      s.fill(getColor(4))
+      s.fill('#9cc4b2')
       s.textFont('Helvetica')
       s.textSize(24)
       s.text('Microsoft presents:', 800 / 2, 600 / 2 - 64)
@@ -542,12 +544,12 @@ new P5(s => {
       for (let i = 0; i < 128; i++) {
         const v = i * 1 / 128
         const t = (v + time / 4) * textColors.length
-        s.fill(i === 127 ? '#fff' : getColor(t))
+        s.fill(i === 127 ? '#9cc4b2' : getColor(t))
         s.textSize(32 + v * v * 48)
         s.text('MINESWEEPER', 800 / 2, 600 / 2 - 8 + v * 64)
       }
 
-      s.fill(getColor(4))
+      s.fill('#9cc4b2')
       s.textStyle(s.NORMAL)
       s.textSize(24)
       s.textFont('Helvetica')
